@@ -1,5 +1,5 @@
 import React, { ChangeEvent, FormEvent, useState } from 'react'
-import { BiPlusCircle, BiRocket, BiTrash } from 'react-icons/bi'
+import { BiPlusCircle, BiRocket, BiTrash,BiEditAlt } from 'react-icons/bi'
 import { BsJournalText } from 'react-icons/bs'
 import { FiCheck } from 'react-icons/fi'
 
@@ -7,7 +7,9 @@ export default function TodoHeader(){
 
     const [tarefa, setTarefa] = useState('')
     const [tarefas, setTarefas] = useState([])
-    const [concluidas, setConcluidas]= useState([])
+    const [concluidas, setConcluidas] = useState([])
+    const [edited, setEdited] = useState('')
+    const [editing, setEditing] = useState(-1)
 
     //Verificar se já existem tarefas ao iniciar a aplicação....
     React.useEffect(() => {            
@@ -34,6 +36,7 @@ export default function TodoHeader(){
 
         localStorage.setItem('storage', JSON.stringify(storage))
         setTarefas(storage)
+        setTarefa('')
 
     }
 
@@ -41,7 +44,6 @@ export default function TodoHeader(){
     const handleTarefa = (event:ChangeEvent<HTMLInputElement>)=>{
         setTarefa(event.target.value)
     }
-
 
 
     //Apagando..............
@@ -81,6 +83,30 @@ export default function TodoHeader(){
         
     }
 
+    //Editando..............
+    const callEdit = (object:ob ,index:number)=>{
+        setEdited(object.then)
+        setEditing(index)
+        console.log(editing);
+        
+    }
+
+    const handleEdit = (object:ob, index:number)=>{
+        const get = JSON.parse(localStorage.getItem('storage')!) || []
+        let him = get.find((i:any)=>i.then === object.then)
+        him.then = edited
+        get[index] = him
+        localStorage.setItem('storage', JSON.stringify(get))
+        setTarefas(get)
+
+        cancelarEdicao()
+    } 
+
+    function cancelarEdicao() {
+        setEditing(-1)
+        setEdited('')
+    }
+
     let tarefasCriadas = tarefas.length + concluidas.length;
 
 
@@ -97,7 +123,7 @@ export default function TodoHeader(){
                 <h1 className='text-bluey font-bold text-3xl'>to<span className='text-purpleDark'>do</span></h1>
             </div>
             <form onSubmit={handleSubmit} className='flex justify-center items-center gap-2'>
-                <input name='does' onChange={handleTarefa} className='text-sm pl-6 h-12 w-[30rem] rounded-[7px] -bg--gray-500 -text--gray-300 focus:outline-none focus:outline-purple' type="text" placeholder='adicione uma nova tarefa'></input> 
+                <input value={tarefa} onChange={handleTarefa} className='text-sm pl-6 h-12 w-[30rem] rounded-[7px] -bg--gray-500 -text--gray-300 focus:outline-none focus:outline-purple' type="text" placeholder='adicione uma nova tarefa'></input> 
                 <button className='text-sm flex h-12 p-5 rounded-[7px] items-center gap-1 text-white bg-blueDark hover:bg-bluey' type="submit">Criar <BiPlusCircle/></button>
             </form>
         </header>
@@ -126,13 +152,30 @@ export default function TodoHeader(){
                 <div className='flex items-center justify-center flex-col mt-9 gap-4'>
                     {
                         tarefas?.map((i:any , index)=>(
-                            <div key={index} className='flex justify-between w-[37rem] rounded-[7px] p-5 -bg--gray-500 gap-4'>
-                                <div onClick={()=>handleCheck(i)} className='py-[7px] absolute px-[7px] hover:bg-bluey hover:bg-opacity-15 border-bluey border-[2px] rounded-[100%]'></div>
-                                <p className=' ml-10 pr-4 max-w-[31rem] text-sm -text--gray-200'>{i.then}</p>
-                                <BiTrash onClick={()=>handleDelete(i)} className='-text--gray-300 absolute ml-[33rem] hover:text-danger' size={18}/>
-                            </div>
+
+                            editing === index ? 
+                                
+                               
+                                    <div key={index} className='flex justify-between w-[37rem] rounded-[7px] p-5 -bg--gray-500 gap-4'>
+                                       <input type="text" className='text-sm pl-6 h-12 w-[30rem] rounded-[7px] -bg--gray-400 -text--gray-300 focus:outline-none focus:outline-purple' onChange={(e:ChangeEvent<HTMLInputElement>)=>setEdited(e.target.value)} value={edited} />
+                                       <button onClick={()=>cancelarEdicao()} type="button" className='text-sm flex h-12 p-5 rounded-[7px] items-center text-white bg-blueDark hover:bg-bluey'>Cancelar</button>
+                                       <button onClick={()=>handleEdit(i,index)} type="button" className='text-sm flex h-12 p-5 rounded-[7px] items-center text-blueDark font-bold bg-transparent hover:text-bluey border border-blueDark'>Salvar</button>
+                                    </div>
+
+                                :
+                                    <div key={index} className='flex justify-between w-[37rem] rounded-[7px] p-5 -bg--gray-500 gap-4'>
+                                        <div onClick={()=>handleCheck(i)} className='py-[7px] absolute px-[7px] hover:bg-bluey hover:bg-opacity-15 border-bluey border-[2px] rounded-[100%]'></div>
+                                        <p className=' ml-10 max-w-[28rem] text-sm -text--gray-200'>{i.then}</p>
+                                        <BiEditAlt onClick={()=>callEdit(i, index)} className='-text--gray-300 absolute ml-[500px] hover:-text--gray-200' size={18}/>
+                                        <BiTrash onClick={()=>handleDelete(i)} className='-text--gray-300 absolute ml-[33rem] hover:text-danger' size={18}/>
+                                    </div>
+                            
+                            
                         ))
                     }
+
+                    
+                    <div className='w-full flex justify-start'><h1 className='text-[#9ca3af] pt-3 text-sm font-bold'>Tarefas Concluidas</h1></div>
 
                    {
                     concluidas?.map((i:any, index:number)=>(
